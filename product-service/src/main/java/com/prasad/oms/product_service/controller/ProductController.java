@@ -1,8 +1,10 @@
 package com.prasad.oms.product_service.controller;
 
-import com.prasad.oms.product_service.entity.Product;
+import com.prasad.oms.product_service.dto.ProductDTO;
 import com.prasad.oms.product_service.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,12 +17,12 @@ public class ProductController {
     private ProductService service;
 
     @PostMapping
-    public Product createProduct(@RequestBody Product product) {
-        return service.saveProduct(product);
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO productDTO) {
+        return ResponseEntity.ok(service.createProduct(productDTO));
     }
 
     @GetMapping
-    public List<Product> getProducts() {
-        return service.getAllProducts();
+    public ResponseEntity<List<ProductDTO>> getProducts() {
+        return ResponseEntity.ok(service.getAllProducts());
     }
 }
