@@ -1,4 +1,4 @@
-package com.prasad.oms.userservice.mapper;
+package com.prasad.oms.user_service.mapper;
 
 import com.prasad.oms.user_service.dto.UserDTO;
 import com.prasad.oms.user_service.entity.User;
@@ -9,9 +9,13 @@ public class UserMapper {
 
     public User toEntity(UserDTO dto) {
         User user = new User();
-        user.setId(dto.getId());
+
+        // ❌ DO NOT set ID for new entity
+        // user.setId(dto.getId());
+
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
+
         return user;
     }
 
