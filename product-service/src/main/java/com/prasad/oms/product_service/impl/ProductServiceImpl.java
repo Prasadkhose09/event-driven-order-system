@@ -27,6 +27,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductDTO getProductById(Long id) {
+
+        Product product = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        return mapper.toDTO(product);
+    }
+
+    @Override
     public List<ProductDTO> getAllProducts() {
         return repository.findAll()
                 .stream()
