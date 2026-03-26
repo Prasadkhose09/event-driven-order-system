@@ -9,27 +9,30 @@ import com.prasad.oms.order_service.repository.OrderRepository;
 import com.prasad.oms.order_service.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import com.prasad.oms.order_service.kafka.OrderProducer;
 @Service
 public class OrderServiceImpl  implements OrderService {
     @Autowired
     private OrderRepository repository;
 
     @Autowired
+    private OrderProducer orderProducer;
+
+
+    @Autowired
     private ProductClient productClient;
 
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO){
+
         ProductResponse product = productClient.getProductById(orderDTO.getProductId());
 
-        if(product== null){
+        if(product == null){
             throw new RuntimeException("Product not found");
-
         }
 
         if(product.getStock() < orderDTO.getQuantity()){
             throw new RuntimeException("Insufficient stock");
-
         }
 
         double totalPrice = product.getPrice() * orderDTO.getQuantity();
@@ -45,7 +48,9 @@ public class OrderServiceImpl  implements OrderService {
         orderDTO.setId(saved.getId());
         orderDTO.setTotalPrice(totalPrice);
 
-        return orderDTO;
+        // 🔥 SEND EVENT TO KAFKA
+        orderProducer.sendOrderEvent(orderDTO);
 
+        return orderDTO;
     }
 }
