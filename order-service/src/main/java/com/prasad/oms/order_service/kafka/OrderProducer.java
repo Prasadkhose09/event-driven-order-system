@@ -20,7 +20,7 @@ public class OrderProducer {
         try {
             String message = objectMapper.writeValueAsString(orderDTO);
             kafkaTemplate.send(TOPIC, message);
-            System.out.println("🔥 Kafka Event Sent: " + message);
+            System.out.println("Kafka Event Sent: " + message);
         } catch (Exception e) {
             e.printStackTrace();
         }
