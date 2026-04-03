@@ -1,8 +1,8 @@
 package com.prasad.oms.order_service.service.impl;
 
-
 import com.prasad.oms.order_service.client.ProductClient;
 import com.prasad.oms.order_service.dto.OrderDTO;
+import com.prasad.oms.order_service.dto.OrderEvent;
 import com.prasad.oms.order_service.dto.ProductResponse;
 import com.prasad.oms.order_service.entity.Order;
 import com.prasad.oms.order_service.repository.OrderRepository;
@@ -10,28 +10,31 @@ import com.prasad.oms.order_service.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.prasad.oms.order_service.kafka.OrderProducer;
+
 @Service
-public class OrderServiceImpl  implements OrderService {
+public class OrderServiceImpl implements OrderService {
+
     @Autowired
     private OrderRepository repository;
 
     @Autowired
     private OrderProducer orderProducer;
 
-
     @Autowired
     private ProductClient productClient;
 
+    // ✅ Removed KafkaTemplate — handled inside OrderProducer
+
     @Override
-    public OrderDTO placeOrder(OrderDTO orderDTO){
+    public OrderDTO placeOrder(OrderDTO orderDTO) {
 
         ProductResponse product = productClient.getProductById(orderDTO.getProductId());
 
-        if(product == null){
+        if (product == null) {
             throw new RuntimeException("Product not found");
         }
 
-        if(product.getStock() < orderDTO.getQuantity()){
+        if (product.getStock() < orderDTO.getQuantity()) {
             throw new RuntimeException("Insufficient stock");
         }
 
@@ -48,9 +51,49 @@ public class OrderServiceImpl  implements OrderService {
         orderDTO.setId(saved.getId());
         orderDTO.setTotalPrice(totalPrice);
 
-        // 🔥 SEND EVENT TO KAFKA
         orderProducer.sendOrderEvent(orderDTO);
 
         return orderDTO;
+    }
+
+    @Override
+    public OrderDTO cancelOrder(Long orderId) {
+
+        Order order = repository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found, Please check order Id again"));
+
+        if ("CANCELLED".equals(order.getStatus())) {
+            throw new RuntimeException("Order is already cancelled");
+        }
+
+        if ("DELIVERED".equals(order.getStatus())) {
+            throw new RuntimeException("Order is Delivered, Please contact our customer care support");
+        }
+
+        productClient.increaseStock(order.getProductId(), order.getQuantity());
+
+        order.setStatus("CANCELLED");
+
+        Order saved = repository.save(order);
+
+        OrderEvent event = new OrderEvent(
+                saved.getUserId(),
+                saved.getProductId(),
+                saved.getQuantity(),
+                saved.getTotalPrice()
+        );
+
+        // ✅ Fixed — passing key and event
+        orderProducer.sendCancelEvent(String.valueOf(saved.getId()), event);
+
+        OrderDTO dto = new OrderDTO();
+        dto.setId(saved.getId());
+        dto.setUserId(saved.getUserId());
+        dto.setProductId(saved.getProductId());
+        dto.setQuantity(saved.getQuantity());
+        dto.setTotalPrice(saved.getTotalPrice());
+        dto.setStatus(saved.getStatus());
+
+        return dto;
     }
 }

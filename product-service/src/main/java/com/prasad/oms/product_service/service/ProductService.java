@@ -12,4 +12,5 @@ public interface ProductService {
     ProductDTO createProduct(ProductDTO productDTO);
     ProductDTO getProductById(Long id);
     List<ProductDTO> getAllProducts();
+    void increaseStock(Long id, int quantity);
 }

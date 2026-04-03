@@ -16,12 +16,12 @@ public class ProductController {
     @Autowired
     private ProductService service;
 
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO productDTO) {
         return ResponseEntity.ok(service.createProduct(productDTO));
     }
 
-    @GetMapping
+    @GetMapping("/getall")
     public ResponseEntity<List<ProductDTO>> getProducts() {
         return ResponseEntity.ok(service.getAllProducts());
     }
@@ -30,4 +30,10 @@ public class ProductController {
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getProductById(id));
     }
+
+    @PutMapping("/increase-stock/{id}")
+    public void increaseStock(@PathVariable Long id, @RequestParam int quantity){
+        service.increaseStock(id,quantity);
+    }
+
 }
