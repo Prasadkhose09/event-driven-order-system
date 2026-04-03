@@ -3,11 +3,13 @@ package com.prasad.oms.order_service.service.impl;
 
 import com.prasad.oms.order_service.client.ProductClient;
 import com.prasad.oms.order_service.dto.OrderDTO;
+import com.prasad.oms.order_service.dto.OrderEvent;
 import com.prasad.oms.order_service.dto.ProductResponse;
 import com.prasad.oms.order_service.entity.Order;
 import com.prasad.oms.order_service.repository.OrderRepository;
 import com.prasad.oms.order_service.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import com.prasad.oms.order_service.kafka.OrderProducer;
 @Service
@@ -22,6 +24,8 @@ public class OrderServiceImpl  implements OrderService {
     @Autowired
     private ProductClient productClient;
 
+    @Autowired
+    private KafkaTemplate<String,Object> kafkaTemplate;
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO){
 
@@ -48,9 +52,50 @@ public class OrderServiceImpl  implements OrderService {
         orderDTO.setId(saved.getId());
         orderDTO.setTotalPrice(totalPrice);
 
-        // 🔥 SEND EVENT TO KAFKA
+
         orderProducer.sendOrderEvent(orderDTO);
 
         return orderDTO;
+    }
+
+    @Override
+    public OrderDTO cancelOrder(Long orderId) {
+        Order order = repository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found, Please check order Id again"));
+
+        if("CANCELLED".equals(order.getStatus())){
+            throw new RuntimeException("Order is already cancelled");
+        }
+
+        if("DELIVERDED".equals(order.getStatus())){
+            throw new RuntimeException("Order is Delivered, Please contact our customer care support");
+        }
+
+        productClient.increaseStock(order.getProductId(), order.getQuantity());
+
+        order.setStatus("CANCELLED");
+
+        Order saved = repository.save(order);
+
+        OrderEvent event = new OrderEvent(
+                saved.getUserId(),
+                saved.getProductId(),
+                saved.getQuantity(),
+                saved.getTotalPrice()
+        );
+
+        kafkaTemplate.send("Order cancelled successfully, Refund will be credited in your bank accout within 48 hours", event);
+
+        OrderDTO dto = new OrderDTO();
+        dto.setId(saved.getId());
+        dto.setUserId(saved.getUserId());
+        dto.setProductId(saved.getProductId());
+        dto.setQuantity(saved.getQuantity());
+        dto.setTotalPrice(saved.getTotalPrice());
+        dto.setStatus(saved.getStatus());
+        return dto;
+
+
+
     }
 }
