@@ -3,6 +3,7 @@ package com.prasad.oms.order_service.client;
 
 import com.prasad.oms.order_service.dto.ProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,9 +13,10 @@ public class ProductClient {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final String PRODUCT_URL = "http://localhost:8082/products/";
+    @Value("${product.service.url:http://product-service:8082/products/}")
+    private String productUrl;
 
     public ProductResponse getProductById(Long productId){
-        return restTemplate.getForObject(PRODUCT_URL + productId, ProductResponse.class);
+        return restTemplate.getForObject(productUrl + productId, ProductResponse.class);
     }
 }
