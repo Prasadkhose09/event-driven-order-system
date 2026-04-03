@@ -42,4 +42,14 @@ public class ProductServiceImpl implements ProductService {
                 .map(mapper::toDTO)
                 .toList();
     }
+
+    @Override
+    public void increaseStock(Long id, int quantity) {
+        Product product = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        product.setStock(product.getStock()+ quantity);
+        repository.save(product);
+
+    }
 }
