@@ -26,8 +26,8 @@ public class NotificationConsumer {
                         @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
 
         try {
-            if (message == null || !message.trim().startsWith("{")) {
-                log.warn("⚠️ Skipping invalid message: {}", message);
+            if (message == null || message.isBlank()) {
+                log.warn("⚠️ Empty message received");
                 return;
             }
 
