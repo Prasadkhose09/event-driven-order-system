@@ -7,34 +7,34 @@ import com.prasad.oms.order_service.dto.ProductResponse;
 import com.prasad.oms.order_service.entity.Order;
 import com.prasad.oms.order_service.repository.OrderRepository;
 import com.prasad.oms.order_service.service.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.prasad.oms.order_service.kafka.OrderProducer;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    @Autowired
-    private OrderRepository repository;
-
-    @Autowired
-    private OrderProducer orderProducer;
-
-    @Autowired
-    private ProductClient productClient;
-
-    // ✅ Removed KafkaTemplate — handled inside OrderProducer
+    private final OrderRepository repository;
+    private final OrderProducer orderProducer;
+    private final ProductClient productClient;
 
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO) {
 
+        log.info("🛒 Placing order for productId={}", orderDTO.getProductId());
+
         ProductResponse product = productClient.getProductById(orderDTO.getProductId());
 
         if (product == null) {
+            log.error("Product not found");
             throw new RuntimeException("Product not found");
         }
 
         if (product.getStock() < orderDTO.getQuantity()) {
+            log.error("Insufficient stock");
             throw new RuntimeException("Insufficient stock");
         }
 
@@ -45,12 +45,17 @@ public class OrderServiceImpl implements OrderService {
         order.setProductId(orderDTO.getProductId());
         order.setQuantity(orderDTO.getQuantity());
         order.setTotalPrice(totalPrice);
+        order.setStatus("CREATED"); // ✅ IMPORTANT
 
         Order saved = repository.save(order);
 
+        log.info("✅ Order saved with ID={}", saved.getId());
+
         orderDTO.setId(saved.getId());
         orderDTO.setTotalPrice(totalPrice);
+        orderDTO.setStatus(saved.getStatus());
 
+        // ✅ Send Kafka event
         orderProducer.sendOrderEvent(orderDTO);
 
         return orderDTO;
@@ -59,23 +64,32 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDTO cancelOrder(Long orderId) {
 
+        log.info("Cancelling order ID={}", orderId);
+
         Order order = repository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found, Please check order Id again"));
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if ("CANCELLED".equals(order.getStatus())) {
-            throw new RuntimeException("Order is already cancelled");
+        // ✅ Better status handling
+        if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Order already cancelled");
         }
 
-        if ("DELIVERED".equals(order.getStatus())) {
-            throw new RuntimeException("Order is Delivered, Please contact our customer care support");
+        if ("DELIVERED".equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Delivered order cannot be cancelled");
         }
 
+        // ✅ Restore stock
         productClient.increaseStock(order.getProductId(), order.getQuantity());
+        log.info("🔄 Stock restored for productId={}", order.getProductId());
 
+        // ✅ Update status
         order.setStatus("CANCELLED");
 
         Order saved = repository.save(order);
 
+        log.info("Order cancelled successfully ID={}", saved.getId());
+
+        // ✅ Create event
         OrderEvent event = new OrderEvent(
                 saved.getUserId(),
                 saved.getProductId(),
@@ -83,9 +97,10 @@ public class OrderServiceImpl implements OrderService {
                 saved.getTotalPrice()
         );
 
-        // ✅ Fixed — passing key and event
+        // ✅ Send cancel event to Kafka
         orderProducer.sendCancelEvent(String.valueOf(saved.getId()), event);
 
+        // ✅ Convert to DTO
         OrderDTO dto = new OrderDTO();
         dto.setId(saved.getId());
         dto.setUserId(saved.getUserId());

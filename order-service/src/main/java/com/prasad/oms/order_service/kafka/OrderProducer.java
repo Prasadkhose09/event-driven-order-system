@@ -6,7 +6,7 @@ import com.prasad.oms.order_service.dto.OrderEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class OrderProducer {
 
@@ -20,16 +20,19 @@ public class OrderProducer {
 
     public void sendOrderEvent(OrderDTO orderDTO) {
         try {
-            String message = objectMapper.writeValueAsString(orderDTO);
-            kafkaTemplate.send(ORDER_CREATED_TOPIC, message);
-            System.out.println("Kafka Event Sent: " + message);
+            String json = objectMapper.writeValueAsString(orderDTO);
+            kafkaTemplate.send("order-created", json);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void sendCancelEvent(String key, OrderEvent event) {
-        kafkaTemplate.send(ORDER_CANCELLED_TOPIC, key, event); // ✅ Removed saved.getId() — use the key param
-        System.out.println("Kafka Cancel Event Sent for key: " + key);
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send("order-cancelled", key, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
