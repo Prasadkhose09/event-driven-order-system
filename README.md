@@ -16,10 +16,10 @@ Client / API Caller
         │                        │                              │
         │                        │ publishes OrderEvent         │
         │                        ▼                              │
-        │              ┌─────────────────────┐                 │
-        │              │  Apache Kafka 3.7   │                 │
-        │              │  Topic: order-events│                 │
-        │              └─────────┬───────────┘                 │
+        │              ┌─────────────────────┐                  │
+        │              │  Apache Kafka 3.7   │                  │
+        │              │  Topic: order-events│                  │
+        │              └─────────┬───────────┘                  │
         │                        │ consumes                     │
         │                        ▼                              │
         │             notification-service (:8085)              │
@@ -32,18 +32,18 @@ Client / API Caller
 
 ### Services
 
-| Service               | Port | Role                                         |
-|-----------------------|------|----------------------------------------------|
-| `user-service`        | 8081 | User registration and management             |
-| `product-service`     | 8082 | Product catalog (CRUD)                       |
+| Service               | Port | Role                                             |
+|-----------------------|------|--------------------------------------------------|
+| `user-service`        | 8081 | User registration and management                 |
+| `product-service`     | 8082 | Product catalog (CRUD)                           |
 | `order-service`       | 8083 | Order placement; publishes `OrderEvent` to Kafka |
-| `notification-service`| 8085 | Consumes `OrderEvent`; sends notifications   |
+| `notification-service`| 8085 | Consumes `OrderEvent`; sends notifications       |
 
 ### Infrastructure
 
-| Component        | Version      | Notes                                     |
-|------------------|--------------|-------------------------------------------|
-| Apache Kafka     | 3.7.0        | KRaft mode (no Zookeeper required)        |
+| Component        | Version      | Notes                                        |
+|------------------|--------------|----------------------------------------------|
+| Apache Kafka     | 3.7.0        | KRaft mode (no Zookeeper required)           |
 | MySQL            | 8.0          | Shared DB (`oms_db`) — see Known Limitations |
 
 ### Event Flow
