@@ -4,7 +4,7 @@ A microservices-based order management system built with **Java Spring Boot** an
 
 ---
 
-                                              ## Architecture
+                                               Architecture
 
 ```
                          Client / API Caller
