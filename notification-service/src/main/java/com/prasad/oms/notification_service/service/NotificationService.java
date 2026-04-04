@@ -1,26 +1,48 @@
 package com.prasad.oms.notification_service.service;
 
 import com.prasad.oms.notification_service.dto.OrderEvent;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
-    @Autowired
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    public void sendNotification(OrderEvent order) {
+    // ✅ Order Created
+    public void sendOrderPlacedEmail(OrderEvent order) {
 
-        String to = "chrismarti7889@gmail.com"; // change this
-        String subject = "Order Confirmation";
+        String email = "prasasdkhose512@gmail.com";
 
-        String body = "Hello,\n\nYour order has been placed successfully.\n\n"
+        String subject = "Order Placed Successfully 🎉";
+
+        String body = "Your order has been placed successfully.\n\n"
                 + "Product ID: " + order.getProductId() + "\n"
                 + "Quantity: " + order.getQuantity() + "\n"
-                + "Total Amount: ₹" + order.getTotalPrice() + "\n\n"
-                + "Thank you!";
+                + "Total Price: ₹" + order.getTotalPrice();
 
-        emailService.sendEmail(to, subject, body);
+        emailService.sendEmail(email, subject, body);
+
+        log.info("📧 Order placed email sent");
+    }
+
+    // ✅ Order Cancelled
+    public void sendOrderCancelledEmail(OrderEvent order) {
+
+        String email = "prasasdkhose512@gmail.com";
+
+        String subject = "Order Cancelled";
+
+        String body = "Your order has been cancelled.\n\n"
+                + "Product ID: " + order.getProductId() + "\n"
+                + "Quantity: " + order.getQuantity() + "\n"
+                + "Total Price: ₹" + order.getTotalPrice();
+
+        emailService.sendEmail(email, subject, body);
+
+        log.info("📧 Order cancelled email sent");
     }
 }
