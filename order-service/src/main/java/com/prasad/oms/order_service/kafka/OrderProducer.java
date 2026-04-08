@@ -14,7 +14,7 @@ public class OrderProducer {
     private static final String ORDER_CANCELLED_TOPIC = "order-cancelled";
 
     @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate; // ✅ Changed String to Object
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

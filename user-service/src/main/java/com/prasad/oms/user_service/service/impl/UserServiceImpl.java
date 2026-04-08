@@ -32,4 +32,15 @@ public class UserServiceImpl implements UserService {
                 .map(mapper::toDTO)
                 .toList();
     }
+
+    @Override
+    public void deleteUser(Long userId) {
+        if(!repository.existsById(userId)){
+            throw new RuntimeException("User not found with this Id: "+ userId);
+        }
+        repository.deleteById(userId);
+
+    }
+
+
 }
