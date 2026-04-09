@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -40,6 +41,11 @@ public class UserServiceImpl implements UserService {
         }
         repository.deleteById(userId);
 
+    }
+
+    @Override
+    public Optional<User> getUser(Long userId) {
+        return repository.findById(userId);
     }
 
 

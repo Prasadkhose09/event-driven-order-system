@@ -12,6 +12,7 @@ public class NotificationService {
 
     private final EmailService emailService;
 
+
     // ✅ Order Created
     public void sendOrderPlacedEmail(OrderEvent order) {
 

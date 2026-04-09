@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -24,7 +25,7 @@ public class UserController {
         return ResponseEntity.ok(service.createUser(userDTO));
     }
 
-    @GetMapping
+    @GetMapping("/getAll")
     public ResponseEntity<List<UserDTO>> getUsers() {
         return ResponseEntity.ok(service.getAllUsers());
     }
@@ -33,5 +34,10 @@ public class UserController {
     public  ResponseEntity<Void> deleteUser(@PathVariable Long  userId){
         service.deleteUser(userId);
         return  ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/getById/{userId}")
+    public Optional<User> getById(@PathVariable Long userId){
+        return ResponseEntity.ok(service.getUser(userId)).getBody();
     }
 }
