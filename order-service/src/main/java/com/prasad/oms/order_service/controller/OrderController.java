@@ -24,4 +24,5 @@ public class OrderController {
     public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id){
         return ResponseEntity.ok(service.cancelOrder(id));
     }
+
 }

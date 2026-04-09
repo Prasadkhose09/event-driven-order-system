@@ -23,8 +23,8 @@ public class ProductClient {
         return restTemplate.getForObject(productUrl + productId, ProductResponse.class);
     }
 
-    @PutMapping("/products/increase-stock/{id}")
-    public void increaseStock(@PathVariable Long id, @RequestParam int quantity) {
-
+    public void increaseStock(Long id, int quantity) {
+        restTemplate.put(productUrl + id + "/increase-stock?quantity=" + quantity, null);
     }
+
 }
