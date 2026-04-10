@@ -16,7 +16,7 @@ public class NotificationService {
     // ✅ Order Created
     public void sendOrderPlacedEmail(OrderEvent order) {
 
-        String email = "chrismarti7889@gmail.com";
+        String email = order.getEmail();
 
         String subject = "Order Placed Successfully 🎉";
 
@@ -33,7 +33,7 @@ public class NotificationService {
     // ✅ Order Cancelled
     public void sendOrderCancelledEmail(OrderEvent order) {
 
-        String email = "chrismarti7889@gmail.com";
+        String email = order.getEmail();
 
         String subject = "Order Cancelled";
 

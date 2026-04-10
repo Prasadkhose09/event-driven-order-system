@@ -6,7 +6,7 @@ import com.prasad.oms.order_service.dto.OrderEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Service
 public class OrderProducer {
 
@@ -21,6 +21,7 @@ public class OrderProducer {
     public void sendOrderEvent(OrderDTO orderDTO) {
         try {
             String json = objectMapper.writeValueAsString(orderDTO);
+
             kafkaTemplate.send("order-created", json);
         } catch (Exception e) {
             e.printStackTrace();

@@ -5,6 +5,7 @@ import com.prasad.oms.order_service.dto.OrderDTO;
 import com.prasad.oms.order_service.dto.OrderEvent;
 import com.prasad.oms.order_service.dto.ProductResponse;
 import com.prasad.oms.order_service.entity.Order;
+import com.prasad.oms.order_service.mapper.OrderMapper;
 import com.prasad.oms.order_service.repository.OrderRepository;
 import com.prasad.oms.order_service.service.OrderService;
 import com.prasad.oms.order_service.kafka.OrderProducer;
@@ -20,6 +21,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository repository;
     private final OrderProducer orderProducer;
     private final ProductClient productClient;
+
+    private final OrderMapper mapper;
 
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO) {
@@ -40,25 +43,19 @@ public class OrderServiceImpl implements OrderService {
 
         double totalPrice = product.getPrice() * orderDTO.getQuantity();
 
-        Order order = new Order();
-        order.setUserId(orderDTO.getUserId());
-        order.setProductId(orderDTO.getProductId());
-        order.setQuantity(orderDTO.getQuantity());
+        Order order = mapper.toEntity(orderDTO);
         order.setTotalPrice(totalPrice);
-        order.setStatus("CREATED"); // ✅ IMPORTANT
+        order.setStatus("CREATED");
+        orderDTO.setTotalPrice(totalPrice);
+        order.setEmail(orderDTO.getEmail()); // ✅ fix 1
 
         Order saved = repository.save(order);
 
         log.info("✅ Order saved with ID={}", saved.getId());
 
-        orderDTO.setId(saved.getId());
-        orderDTO.setTotalPrice(totalPrice);
-        orderDTO.setStatus(saved.getStatus());
+        orderProducer.sendOrderEvent(orderDTO); // ✅ fix 2
 
-        // ✅ Send Kafka event
-        orderProducer.sendOrderEvent(orderDTO);
-
-        return orderDTO;
+        return mapper.toDTO(saved);
     }
 
     @Override
@@ -69,7 +66,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = repository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // ✅ Better status handling
         if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
             throw new RuntimeException("Order already cancelled");
         }
@@ -78,37 +74,25 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Delivered order cannot be cancelled");
         }
 
-        // ✅ Restore stock
         productClient.increaseStock(order.getProductId(), order.getQuantity());
         log.info("🔄 Stock restored for productId={}", order.getProductId());
 
-        // ✅ Update status
         order.setStatus("CANCELLED");
 
         Order saved = repository.save(order);
 
         log.info("Order cancelled successfully ID={}", saved.getId());
 
-        // ✅ Create event
         OrderEvent event = new OrderEvent(
                 saved.getUserId(),
                 saved.getProductId(),
                 saved.getQuantity(),
-                saved.getTotalPrice()
+                saved.getTotalPrice(),
+                saved.getEmail() // ✅ fix 3
         );
 
-        // ✅ Send cancel event to Kafka
         orderProducer.sendCancelEvent(String.valueOf(saved.getId()), event);
 
-        // ✅ Convert to DTO
-        OrderDTO dto = new OrderDTO();
-        dto.setId(saved.getId());
-        dto.setUserId(saved.getUserId());
-        dto.setProductId(saved.getProductId());
-        dto.setQuantity(saved.getQuantity());
-        dto.setTotalPrice(saved.getTotalPrice());
-        dto.setStatus(saved.getStatus());
-
-        return dto;
+        return mapper.toDTO(saved); // ✅ fix 4 - removed unused dto
     }
 }

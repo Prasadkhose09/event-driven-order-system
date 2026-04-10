@@ -1,6 +1,7 @@
 package com.prasad.oms.product_service.controller;
 
 import com.prasad.oms.product_service.dto.ProductDTO;
+import com.prasad.oms.product_service.impl.ProductServiceImpl;
 import com.prasad.oms.product_service.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/products")
 public class ProductController {
+
+    @Autowired
+    private ProductService productService;
 
     @Autowired
     private ProductService service;
@@ -31,9 +35,12 @@ public class ProductController {
         return ResponseEntity.ok(service.getProductById(id));
     }
 
-    @PutMapping("/increase-stock/{id}")
-    public void increaseStock(@PathVariable Long id, @RequestParam int quantity){
-        service.increaseStock(id,quantity);
+    @PutMapping("/{id}/increase-stock")
+    public ResponseEntity<Void> increaseStock(
+            @PathVariable Long id,
+            @RequestParam int quantity) {
+        productService.increaseStock(id, quantity);
+        return ResponseEntity.noContent().build();
     }
 
 }

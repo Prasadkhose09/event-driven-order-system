@@ -32,6 +32,10 @@ public class NotificationConsumer {
             }
 
             OrderEvent order = objectMapper.readValue(message, OrderEvent.class);
+            if (order == null) {
+                log.warn("Failed to deserialize message: {}", message);
+                return;
+            }
 
             log.info("Event received from topic {}: {}", topic, order);
 
