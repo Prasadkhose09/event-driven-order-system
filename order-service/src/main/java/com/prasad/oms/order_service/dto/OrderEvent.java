@@ -13,4 +13,5 @@ public class OrderEvent {
     private Long productId;
     private int quantity;
     private double totalPrice;
+    private String email;
 }
