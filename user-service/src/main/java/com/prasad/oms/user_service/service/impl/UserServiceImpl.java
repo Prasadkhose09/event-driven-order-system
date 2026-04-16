@@ -3,13 +3,13 @@ package com.prasad.oms.user_service.service.impl;
 import com.prasad.oms.user_service.dto.UserDTO;
 import com.prasad.oms.user_service.entity.User;
 import com.prasad.oms.user_service.exception.UserAlreadyExistException;
+import com.prasad.oms.user_service.exception.UserNotFoundException;
 import com.prasad.oms.user_service.repository.UserRepository;
 import com.prasad.oms.user_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -49,8 +49,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> getUser(Long userId) {
-        return repository.findById(userId);
+    public UserDTO getUser(Long userId) {
+
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+        return mapper.toDTO(user);
     }
 
 
