@@ -2,6 +2,7 @@ package com.prasad.oms.user_service.service.impl;
 
 import com.prasad.oms.user_service.dto.UserDTO;
 import com.prasad.oms.user_service.entity.User;
+import com.prasad.oms.user_service.exception.UserAlreadyExistException;
 import com.prasad.oms.user_service.repository.UserRepository;
 import com.prasad.oms.user_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO createUser(UserDTO userDTO) {
+        if(repository.existsByEmail(userDTO.getEmail())){
+            throw new UserAlreadyExistException("User with this email already exists");
+
+        }
         User user = mapper.toEntity(userDTO);
         User saved = repository.save(user);
         return mapper.toDTO(saved);
@@ -47,6 +52,8 @@ public class UserServiceImpl implements UserService {
     public Optional<User> getUser(Long userId) {
         return repository.findById(userId);
     }
+
+
 
 
 }
