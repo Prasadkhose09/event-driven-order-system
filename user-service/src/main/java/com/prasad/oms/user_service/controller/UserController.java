@@ -40,4 +40,5 @@ public class UserController {
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(service.getUser(id));
     }
+
 }
