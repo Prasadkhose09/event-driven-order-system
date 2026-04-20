@@ -5,6 +5,7 @@ import com.prasad.oms.order_service.dto.OrderDTO;
 import com.prasad.oms.order_service.dto.OrderEvent;
 import com.prasad.oms.order_service.dto.ProductResponse;
 import com.prasad.oms.order_service.entity.Order;
+import com.prasad.oms.order_service.exception.*;
 import com.prasad.oms.order_service.mapper.OrderMapper;
 import com.prasad.oms.order_service.repository.OrderRepository;
 import com.prasad.oms.order_service.service.OrderService;
@@ -33,12 +34,12 @@ public class OrderServiceImpl implements OrderService {
 
         if (product == null) {
             log.error("Product not found");
-            throw new RuntimeException("Product not found");
+            throw new ProductNotFoundException("Product not found");
         }
 
         if (product.getStock() < orderDTO.getQuantity()) {
             log.error("Insufficient stock");
-            throw new RuntimeException("Insufficient stock");
+            throw new InsufficientStockException("Insufficient stock");
         }
 
         double totalPrice = product.getPrice() * orderDTO.getQuantity();
@@ -64,14 +65,14 @@ public class OrderServiceImpl implements OrderService {
         log.info("Cancelling order ID={}", orderId);
 
         Order order = repository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
 
         if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
-            throw new RuntimeException("Order already cancelled");
+            throw new OrderAlreadyCancelledException("Order already cancelled");
         }
 
         if ("DELIVERED".equalsIgnoreCase(order.getStatus())) {
-            throw new RuntimeException("Delivered order cannot be cancelled");
+            throw new DeliveredOrderException("Delivered order cannot be cancelled");
         }
 
         productClient.increaseStock(order.getProductId(), order.getQuantity());

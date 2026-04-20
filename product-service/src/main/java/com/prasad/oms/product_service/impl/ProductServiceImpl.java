@@ -2,6 +2,7 @@ package com.prasad.oms.product_service.impl;
 
 import com.prasad.oms.product_service.dto.ProductDTO;
 import com.prasad.oms.product_service.entity.Product;
+import com.prasad.oms.product_service.exception.ProductNotFoundException;
 import com.prasad.oms.product_service.mapper.ProductMapper;
 import com.prasad.oms.product_service.repository.ProductRepository;
 import com.prasad.oms.product_service.service.ProductService;
@@ -30,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDTO getProductById(Long id) {
 
         Product product = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id "+id));
 
         return mapper.toDTO(product);
     }
@@ -45,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
 
     public  void increaseStock(Long id, int quantity) {
         Product product = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id "+id));
         product.setStock(product.getStock() + quantity);
         repository.save(product);
     }
