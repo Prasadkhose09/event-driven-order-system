@@ -26,4 +26,8 @@ public class OrderController {
         return ResponseEntity.ok(service.cancelOrder(id));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id){
+        return ResponseEntity.ok(service.getOrderById(id));
+    }
 }

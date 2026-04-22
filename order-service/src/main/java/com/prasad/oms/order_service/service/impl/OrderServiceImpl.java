@@ -96,4 +96,23 @@ public class OrderServiceImpl implements OrderService {
 
         return mapper.toDTO(saved); // ✅ fix 4 - removed unused dto
     }
+
+    @Override
+    public OrderDTO getOrderById(Long id) {
+        Order order = repository.findById(id).orElseThrow(()-> new OrderNotFoundException("Order Not found with id "+ id));
+
+        OrderDTO dto = new OrderDTO(
+                order.getId(),
+                order.getUserId(),
+                order.getProductId(),
+                order.getQuantity(),
+                order.getTotalPrice(),
+                order.getStatus(),
+                order.getEmail()
+                );
+
+
+        return mapper.toDTO(order);
+
+    }
 }

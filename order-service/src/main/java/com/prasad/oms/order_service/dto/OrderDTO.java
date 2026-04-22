@@ -2,10 +2,13 @@ package com.prasad.oms.order_service.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import jakarta.validation.constraints.NotNull;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
 public class OrderDTO {
     private Long id;
 
@@ -22,5 +25,6 @@ public class OrderDTO {
 
     @NotBlank(message = "Email is required")
     private String email;
+
 
 }
