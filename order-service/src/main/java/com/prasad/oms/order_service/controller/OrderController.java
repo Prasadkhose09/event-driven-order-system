@@ -2,6 +2,7 @@ package com.prasad.oms.order_service.controller;
 
 import com.prasad.oms.order_service.dto.OrderDTO;
 import com.prasad.oms.order_service.service.OrderService;
+import jakarta.validation.Valid;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ public class OrderController {
     private OrderService service;
 
     @PostMapping("/placeOrder")
-    public ResponseEntity<OrderDTO> placeOrder(@RequestBody OrderDTO orderDTO){
+    public ResponseEntity<OrderDTO> placeOrder(@Valid @RequestBody OrderDTO orderDTO){
         return ResponseEntity.ok(service.placeOrder(orderDTO));
     }
 
