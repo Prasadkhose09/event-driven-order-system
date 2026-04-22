@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class OrderDTO {
     private Long id;
 
