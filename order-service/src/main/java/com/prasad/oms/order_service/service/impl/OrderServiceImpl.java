@@ -1,9 +1,11 @@
 package com.prasad.oms.order_service.service.impl;
 
 import com.prasad.oms.order_service.client.ProductClient;
+import com.prasad.oms.order_service.client.UserClient;
 import com.prasad.oms.order_service.dto.OrderDTO;
 import com.prasad.oms.order_service.dto.OrderEvent;
 import com.prasad.oms.order_service.dto.ProductResponse;
+import com.prasad.oms.order_service.dto.UserResponse;
 import com.prasad.oms.order_service.entity.Order;
 import com.prasad.oms.order_service.exception.*;
 import com.prasad.oms.order_service.mapper.OrderMapper;
@@ -24,9 +26,12 @@ public class OrderServiceImpl implements OrderService {
     private final ProductClient productClient;
 
     private final OrderMapper mapper;
+    private final UserClient userClient;
+
 
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO) {
+
 
         log.info("🛒 Placing order for productId={}", orderDTO.getProductId());
 
@@ -42,8 +47,8 @@ public class OrderServiceImpl implements OrderService {
             throw new InsufficientStockException("Insufficient stock");
         }
 
-        double totalPrice = product.getPrice() * orderDTO.getQuantity();
 
+        double totalPrice = product.getPrice() * orderDTO.getQuantity();
         Order order = mapper.toEntity(orderDTO);
         order.setTotalPrice(totalPrice);
         order.setStatus("CREATED");
@@ -51,6 +56,13 @@ public class OrderServiceImpl implements OrderService {
         order.setEmail(orderDTO.getEmail()); // ✅ fix 1
 
         Order saved = repository.save(order);
+
+        // fetch email from user-service
+        UserResponse user = userClient.getUserById(orderDTO.getUserId());
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        order.setEmail(user.getEmail()); //
 
         log.info("✅ Order saved with ID={}", saved.getId());
 

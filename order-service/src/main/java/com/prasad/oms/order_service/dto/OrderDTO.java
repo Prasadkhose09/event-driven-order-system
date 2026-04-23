@@ -20,11 +20,12 @@ public class OrderDTO {
     private Long productId;
 
     @Min(value = 1, message = "Quantity must be at least 1")
-    private int quantity;
-    private double totalPrice;
+    private Integer quantity; // ✅ int → Integer
+
+    private Double totalPrice; // ✅ double → Double
     private String status;
 
-    @NotBlank(message = "Email is required")
+
     private String email;
 
 
