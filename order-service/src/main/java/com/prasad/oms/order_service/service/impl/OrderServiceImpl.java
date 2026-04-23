@@ -29,44 +29,48 @@ public class OrderServiceImpl implements OrderService {
     private final UserClient userClient;
 
 
+
     @Override
     public OrderDTO placeOrder(OrderDTO orderDTO) {
 
+        log.info("Placing order for productId={}", orderDTO.getProductId());
 
-        log.info("🛒 Placing order for productId={}", orderDTO.getProductId());
-
-        ProductResponse product = productClient.getProductById(orderDTO.getProductId());
-
-        if (product == null) {
-            log.error("Product not found");
-            throw new ProductNotFoundException("Product not found");
-        }
-
-        if (product.getStock() < orderDTO.getQuantity()) {
-            log.error("Insufficient stock");
-            throw new InsufficientStockException("Insufficient stock");
-        }
-
-
-        double totalPrice = product.getPrice() * orderDTO.getQuantity();
-        Order order = mapper.toEntity(orderDTO);
-        order.setTotalPrice(totalPrice);
-        order.setStatus("CREATED");
-        orderDTO.setTotalPrice(totalPrice);
-        order.setEmail(orderDTO.getEmail()); // ✅ fix 1
-
-        Order saved = repository.save(order);
-
-        // fetch email from user-service
+        // ✅ 1. fetch user first
         UserResponse user = userClient.getUserById(orderDTO.getUserId());
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        order.setEmail(user.getEmail()); //
+        log.info("Fetched user: {}", user);
 
-        log.info("✅ Order saved with ID={}", saved.getId());
+        // ✅ 2. validate product
+        ProductResponse product = productClient.getProductById(orderDTO.getProductId());
+        if (product == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        if (product.getStock() < orderDTO.getQuantity()) {
+            throw new InsufficientStockException("Insufficient stock");
+        }
 
-        orderProducer.sendOrderEvent(orderDTO); // ✅ fix 2
+        // ✅ 3. calculate price
+        double totalPrice = product.getPrice() * orderDTO.getQuantity();
+
+        // ✅ 4. build order entity
+        Order order = mapper.toEntity(orderDTO);
+        order.setTotalPrice(totalPrice);
+        order.setStatus("CREATED");
+        order.setEmail(user.getEmail()); // from user-service
+
+        // ✅ 5. save to DB
+        Order saved = repository.save(order);
+        log.info("Order saved with ID={}", saved.getId());
+
+        // ✅ 6. set email on DTO before sending to Kafka
+        orderDTO.setEmail(user.getEmail());
+        orderDTO.setTotalPrice(totalPrice);
+        orderDTO.setId(saved.getId());
+
+        // ✅ 7. send Kafka event
+        orderProducer.sendOrderEvent(orderDTO);
 
         return mapper.toDTO(saved);
     }
