@@ -23,6 +23,7 @@ public class OrderProducer {
             String json = objectMapper.writeValueAsString(orderDTO);
 
             kafkaTemplate.send("order-created", json);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
