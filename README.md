@@ -120,6 +120,7 @@ MYSQL_DATABASE=oms_db
 
 ---
 
+
 ## Kafka Topics
 
 | Topic           | Producer       | Consumer(s)           | Payload        |
