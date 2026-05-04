@@ -10,7 +10,7 @@ A microservices-based order management system built with **Java Spring Boot** an
                          Client / API Caller
                                    │
         |──────────────────────────|────────────────────────────┐
-        ▼                         ▼
+        ▼                          ▼
  user-service (:8081)      order-service (:8083)       product-service (:8082)
   User management            Place orders                 Product catalog
         │                        │                              │
